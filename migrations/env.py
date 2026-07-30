@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import create_async_engine
 
 from eka.config import get_settings
 from eka.modules.documents.infrastructure import models  # noqa: F401  (register tables)
+from eka.modules.ingestion.infrastructure import models as _ingestion_models  # noqa: F401
 from eka.shared.infrastructure.database import Base
 
 config = context.config
