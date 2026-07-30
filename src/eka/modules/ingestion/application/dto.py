@@ -16,7 +16,7 @@ class ChunkDTO:
     dimension: int
 
     @classmethod
-    def from_entity(cls, chunk: Chunk) -> "ChunkDTO":
+    def from_entity(cls, chunk: Chunk) -> ChunkDTO:
         return cls(
             id=chunk.id,
             document_id=chunk.document_id,

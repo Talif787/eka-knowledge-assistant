@@ -9,15 +9,18 @@ from types import TracebackType
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from eka.modules.documents.domain.repository import DocumentRepository
 from eka.modules.documents.infrastructure.repository import SqlAlchemyDocumentRepository
 
 
 class SqlAlchemyUnitOfWork:
+    documents: DocumentRepository
+
     def __init__(self, session_factory: async_sessionmaker[AsyncSession]) -> None:
         self._session_factory = session_factory
         self._session: AsyncSession | None = None
 
-    async def __aenter__(self) -> "SqlAlchemyUnitOfWork":
+    async def __aenter__(self) -> SqlAlchemyUnitOfWork:
         self._session = self._session_factory()
         self.documents = SqlAlchemyDocumentRepository(self._session)
         return self

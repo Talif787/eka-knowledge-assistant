@@ -27,7 +27,7 @@ class DocumentDTO:
     updated_at: datetime
 
     @classmethod
-    def from_aggregate(cls, doc: Document) -> "DocumentDTO":
+    def from_aggregate(cls, doc: Document) -> DocumentDTO:
         return cls(
             id=doc.id,
             tenant_id=doc.tenant_id,

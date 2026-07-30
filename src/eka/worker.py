@@ -8,7 +8,10 @@ on SIGINT and SIGTERM so in-flight jobs finish and locks are released.
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import signal
+
+from sqlalchemy.ext.asyncio import AsyncEngine
 
 from eka.config import Settings, get_settings
 from eka.modules.documents.application.lifecycle import DocumentLifecycleService
@@ -55,12 +58,10 @@ class IngestionWorker:
         while not self._stopping.is_set():
             processed = await self._drain_once()
             if processed == 0:
-                try:
+                with contextlib.suppress(TimeoutError):
                     await asyncio.wait_for(
                         self._stopping.wait(), timeout=self._poll_interval
                     )
-                except TimeoutError:
-                    pass
         logger.info("worker_stopped", worker_id=self._worker_id)
 
     async def _drain_once(self) -> int:
@@ -89,7 +90,7 @@ class IngestionWorker:
                     logger.error("mark_failed_failed", document_id=str(job.document_id))
 
 
-def build_worker(settings: Settings) -> tuple[IngestionWorker, object]:
+def build_worker(settings: Settings) -> tuple[IngestionWorker, AsyncEngine]:
     engine = create_engine(settings.database_dsn, pool_size=settings.database_pool_size)
     session_factory = create_session_factory(engine)
 

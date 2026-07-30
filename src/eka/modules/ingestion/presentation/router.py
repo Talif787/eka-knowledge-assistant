@@ -7,13 +7,14 @@ from fastapi import APIRouter, Depends, Query, status
 
 from eka.api.dependencies import (
     get_tenant_id,
-    ingestion_list_chunks,
+    ingestion_chunk_repository,
     ingestion_list_jobs,
     upload_content_handler,
 )
 from eka.modules.ingestion.application.content import UploadDocumentContentHandler
 from eka.modules.ingestion.application.dto import ChunkDTO
 from eka.modules.ingestion.application.job_queries import ListJobsHandler, ListJobsQuery
+from eka.modules.ingestion.infrastructure.repository import SqlAlchemyChunkRepository
 from eka.modules.ingestion.presentation.schemas import (
     ChunkListResponse,
     ChunkResponse,
@@ -48,9 +49,9 @@ async def upload_content(
 async def list_chunks(
     document_id: uuid.UUID,
     tenant_id: uuid.UUID = Depends(get_tenant_id),
-    list_for_document=Depends(ingestion_list_chunks),
+    repository: SqlAlchemyChunkRepository = Depends(ingestion_chunk_repository),
 ) -> ChunkListResponse:
-    chunks = await list_for_document(tenant_id, document_id)
+    chunks = await repository.list_for_document(tenant_id, document_id)
     dtos = [ChunkDTO.from_entity(c) for c in chunks]
     return ChunkListResponse(
         items=[ChunkResponse.from_dto(d) for d in dtos], count=len(dtos)

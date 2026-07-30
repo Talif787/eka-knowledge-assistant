@@ -35,7 +35,11 @@ from tests.conftest import requires_db
 
 pytestmark = [pytest.mark.asyncio, requires_db]
 
-CONTENT = ("Paragraph one about databases. " * 20) + "\n\n" + ("Paragraph two about retrieval. " * 20)
+CONTENT = (
+    ("Paragraph one about databases. " * 20)
+    + "\n\n"
+    + ("Paragraph two about retrieval. " * 20)
+)
 
 
 async def test_pipeline_indexes_document_and_persists_chunks(session_factory) -> None:

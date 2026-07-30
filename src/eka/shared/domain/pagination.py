@@ -2,18 +2,18 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import StrEnum
 from typing import Generic, TypeVar
 
 from eka.shared.domain.errors import ValidationError
 
-T = TypeVar("T")
-
 DEFAULT_LIMIT = 20
 MAX_LIMIT = 100
 
+T = TypeVar("T")
 
-class SortDirection(str, Enum):
+
+class SortDirection(StrEnum):
     ASC = "asc"
     DESC = "desc"
 

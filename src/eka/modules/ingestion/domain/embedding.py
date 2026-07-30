@@ -25,7 +25,7 @@ class Embedding:
     def dimension(self) -> int:
         return len(self.values)
 
-    def cosine_similarity(self, other: "Embedding") -> float:
+    def cosine_similarity(self, other: Embedding) -> float:
         if self.dimension != other.dimension:
             raise ValidationError("cannot compare embeddings of different dimensions")
         dot = sum(a * b for a, b in zip(self.values, other.values, strict=True))

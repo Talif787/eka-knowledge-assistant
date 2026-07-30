@@ -28,7 +28,9 @@ _STATUS_BY_CODE: dict[type[DomainError], int] = {
 }
 
 
-def _envelope(request: Request, code: str, message: str, details: dict) -> JSONResponse:
+def _envelope(
+    request: Request, code: str, message: str, details: dict[str, object]
+) -> JSONResponse:
     request_id = getattr(request.state, "request_id", None)
     status_code = getattr(request.state, "_status_code", status.HTTP_400_BAD_REQUEST)
     return JSONResponse(

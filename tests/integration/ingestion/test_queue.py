@@ -9,7 +9,6 @@ import uuid
 
 import pytest
 
-from eka.modules.ingestion.application.jobs import JobStatus
 from eka.modules.ingestion.infrastructure.queue import SqlAlchemyJobQueue
 from tests.conftest import requires_db
 

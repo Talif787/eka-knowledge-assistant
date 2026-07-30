@@ -139,7 +139,9 @@ class SqlAlchemyJobQueue:
             }
         async with self._session_factory() as session:
             await session.execute(
-                update(IngestionJobModel).where(IngestionJobModel.id == job.id).values(**values)
+                update(IngestionJobModel)
+                .where(IngestionJobModel.id == job.id)
+                .values(**values)
             )
             await session.commit()
         return dead_lettered

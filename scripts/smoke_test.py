@@ -28,7 +28,9 @@ CONTENT = (
 )
 
 
-def request(method: str, path: str, tenant: str, body: dict | None = None) -> tuple[int, dict | None]:
+def request(
+    method: str, path: str, tenant: str, body: dict | None = None
+) -> tuple[int, dict | None]:
     data = json.dumps(body).encode() if body is not None else None
     req = urllib.request.Request(
         f"{BASE_URL}{path}",
@@ -71,7 +73,9 @@ def main() -> None:
     print(f"   document_id = {document_id}  status = {doc['status']}")
 
     print("\n2. uploading content (enqueues ingestion job)...")
-    status, _ = request("POST", f"/v1/documents/{document_id}/content", tenant, {"content": CONTENT})
+    status, _ = request(
+        "POST", f"/v1/documents/{document_id}/content", tenant, {"content": CONTENT}
+    )
     print(f"   accepted (HTTP {status})")
 
     print("\n3. waiting for the worker to index...")
@@ -96,7 +100,11 @@ def main() -> None:
     for job in jobs["items"]:
         print(f"   status={job['status']}  attempts={job['attempts']}/{job['max_attempts']}")
 
-    print("\ndone." if final_status == "indexed" else "\nfinished, but the document did not reach 'indexed'.")
+    print(
+        "\ndone."
+        if final_status == "indexed"
+        else "\nfinished, but the document did not reach 'indexed'."
+    )
 
 
 if __name__ == "__main__":

@@ -47,4 +47,9 @@ class ListJobsHandler:
             )
             for r in rows
         ]
-        return Page(items=items, total=len(items), limit=query.page.limit, offset=query.page.offset)
+        return Page(
+            items=items,
+            total=len(items),
+            limit=query.page.limit,
+            offset=query.page.offset,
+        )

@@ -27,7 +27,7 @@ class ChunkResponse(BaseModel):
     dimension: int
 
     @classmethod
-    def from_dto(cls, dto: ChunkDTO) -> "ChunkResponse":
+    def from_dto(cls, dto: ChunkDTO) -> ChunkResponse:
         return cls(
             id=dto.id,
             document_id=dto.document_id,
@@ -51,7 +51,7 @@ class JobResponse(BaseModel):
     last_error: str | None
 
     @classmethod
-    def from_dto(cls, dto: JobDTO) -> "JobResponse":
+    def from_dto(cls, dto: JobDTO) -> JobResponse:
         return cls(
             id=dto.id,
             document_id=dto.document_id,

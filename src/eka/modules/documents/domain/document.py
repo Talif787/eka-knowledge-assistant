@@ -10,7 +10,7 @@ import re
 import uuid
 from dataclasses import dataclass
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 
 from eka.shared.domain.base import AggregateRoot, DomainEvent, new_uuid, utcnow
 from eka.shared.domain.errors import StateTransitionError, ValidationError
@@ -19,7 +19,7 @@ _SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 _MAX_TITLE_LEN = 512
 
 
-class SourceType(str, Enum):
+class SourceType(StrEnum):
     UPLOAD = "upload"
     CONFLUENCE = "confluence"
     SHAREPOINT = "sharepoint"
@@ -28,7 +28,7 @@ class SourceType(str, Enum):
     GOOGLE_DRIVE = "google_drive"
 
 
-class DocumentStatus(str, Enum):
+class DocumentStatus(StrEnum):
     REGISTERED = "registered"
     INGESTING = "ingesting"
     INDEXED = "indexed"
@@ -130,7 +130,7 @@ class Document(AggregateRoot):
         source_type: SourceType,
         source_uri: str,
         content_hash: ContentHash,
-    ) -> "Document":
+    ) -> Document:
         now = utcnow()
         doc = cls(
             id=new_uuid(),

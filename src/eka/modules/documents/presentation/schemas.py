@@ -33,7 +33,7 @@ class DocumentResponse(BaseModel):
     updated_at: datetime
 
     @classmethod
-    def from_dto(cls, dto: DocumentDTO) -> "DocumentResponse":
+    def from_dto(cls, dto: DocumentDTO) -> DocumentResponse:
         return cls(
             id=dto.id,
             tenant_id=dto.tenant_id,

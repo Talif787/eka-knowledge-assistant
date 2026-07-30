@@ -7,6 +7,8 @@ which suits a modular monolith of this size.
 from __future__ import annotations
 
 import uuid
+from collections.abc import AsyncGenerator
+from typing import cast
 
 from fastapi import Depends, Header, Request
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
@@ -24,11 +26,11 @@ from eka.modules.documents.infrastructure.unit_of_work import SqlAlchemyUnitOfWo
 
 
 def get_engine(request: Request) -> AsyncEngine:
-    return request.app.state.engine
+    return cast(AsyncEngine, request.app.state.engine)
 
 
 def get_session_factory(request: Request) -> async_sessionmaker[AsyncSession]:
-    return request.app.state.session_factory
+    return cast("async_sessionmaker[AsyncSession]", request.app.state.session_factory)
 
 
 def get_unit_of_work(
@@ -39,7 +41,7 @@ def get_unit_of_work(
 
 async def get_read_session(
     session_factory: async_sessionmaker[AsyncSession] = Depends(get_session_factory),
-) -> AsyncSession:
+) -> AsyncGenerator[AsyncSession, None]:
     async with session_factory() as session:
         yield session
 
@@ -113,8 +115,10 @@ def upload_content_handler(
     )
 
 
-def ingestion_list_chunks(session: AsyncSession = Depends(get_read_session)):
-    return SqlAlchemyChunkRepository(session).list_for_document
+def ingestion_chunk_repository(
+    session: AsyncSession = Depends(get_read_session),
+) -> SqlAlchemyChunkRepository:
+    return SqlAlchemyChunkRepository(session)
 
 
 def ingestion_list_jobs(

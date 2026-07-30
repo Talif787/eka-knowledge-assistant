@@ -59,7 +59,7 @@ class Chunk(Entity):
         ordinal: int,
         text: str,
         embedding: Embedding,
-    ) -> "Chunk":
+    ) -> Chunk:
         return cls(
             id=new_uuid(),
             tenant_id=tenant_id,

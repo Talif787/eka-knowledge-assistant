@@ -5,6 +5,7 @@ directly, keeping the application layer persistence-agnostic.
 """
 from __future__ import annotations
 
+from types import TracebackType
 from typing import Protocol, runtime_checkable
 
 from eka.modules.documents.domain.repository import DocumentRepository
@@ -14,7 +15,12 @@ from eka.modules.documents.domain.repository import DocumentRepository
 class UnitOfWork(Protocol):
     documents: DocumentRepository
 
-    async def __aenter__(self) -> "UnitOfWork": ...
-    async def __aexit__(self, *exc: object) -> None: ...
+    async def __aenter__(self) -> UnitOfWork: ...
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc: BaseException | None,
+        tb: TracebackType | None,
+    ) -> None: ...
     async def commit(self) -> None: ...
     async def rollback(self) -> None: ...

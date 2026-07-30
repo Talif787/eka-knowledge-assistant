@@ -7,14 +7,14 @@ from __future__ import annotations
 
 import uuid
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 from typing import Protocol, runtime_checkable
 
 _BASE_BACKOFF_SECONDS = 5
 _MAX_BACKOFF_SECONDS = 3600
 
 
-class JobStatus(str, Enum):
+class JobStatus(StrEnum):
     PENDING = "pending"
     PROCESSING = "processing"
     COMPLETED = "completed"
@@ -29,7 +29,7 @@ def compute_backoff_seconds(attempts: int) -> int:
     """
     if attempts < 1:
         return 0
-    delay = _BASE_BACKOFF_SECONDS * (2 ** (attempts - 1))
+    delay: int = _BASE_BACKOFF_SECONDS * (2 ** (attempts - 1))
     return min(delay, _MAX_BACKOFF_SECONDS)
 
 

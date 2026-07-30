@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import uuid
+from types import TracebackType
 from typing import Protocol, runtime_checkable
 
 from eka.modules.ingestion.domain.chunk import Chunk
@@ -37,7 +38,12 @@ class IngestionUnitOfWork(Protocol):
     chunks: ChunkRepository
     content: ContentStore
 
-    async def __aenter__(self) -> "IngestionUnitOfWork": ...
-    async def __aexit__(self, *exc: object) -> None: ...
+    async def __aenter__(self) -> IngestionUnitOfWork: ...
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc: BaseException | None,
+        tb: TracebackType | None,
+    ) -> None: ...
     async def commit(self) -> None: ...
     async def rollback(self) -> None: ...

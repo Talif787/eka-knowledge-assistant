@@ -5,6 +5,7 @@ overridden settings and dependencies without importing a module-level singleton.
 """
 from __future__ import annotations
 
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -37,7 +38,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
 
     @asynccontextmanager
-    async def lifespan(app: FastAPI):
+    async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         engine = create_engine(
             settings.database_dsn,
             echo=settings.database_echo,

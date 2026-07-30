@@ -8,11 +8,11 @@ from __future__ import annotations
 import uuid
 from abc import ABC
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 
 def utcnow() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 def new_uuid() -> uuid.UUID:

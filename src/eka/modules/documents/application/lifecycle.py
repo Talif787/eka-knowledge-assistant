@@ -16,7 +16,9 @@ class DocumentLifecycleService:
     def __init__(self, uow: UnitOfWork) -> None:
         self._uow = uow
 
-    async def _transition(self, tenant_id: uuid.UUID, document_id: uuid.UUID, action: str) -> None:
+    async def _transition(
+        self, tenant_id: uuid.UUID, document_id: uuid.UUID, action: str
+    ) -> None:
         async with self._uow:
             document = await self._uow.documents.get(tenant_id, document_id)
             if document is None:
