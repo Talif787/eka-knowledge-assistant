@@ -5,6 +5,7 @@ overridden settings and dependencies without importing a module-level singleton.
 """
 from __future__ import annotations
 
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -20,6 +21,7 @@ from eka.api.middleware import (
 )
 from eka.config import Settings, get_settings
 from eka.modules.documents.presentation.router import router as documents_router
+from eka.modules.ingestion.presentation.router import router as ingestion_router
 from eka.shared.infrastructure.database import create_engine, create_session_factory
 from eka.shared.infrastructure.logging import configure_logging, get_logger
 from eka.shared.infrastructure.observability import configure_tracing
@@ -36,7 +38,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
 
     @asynccontextmanager
-    async def lifespan(app: FastAPI):
+    async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         engine = create_engine(
             settings.database_dsn,
             echo=settings.database_echo,
@@ -66,6 +68,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     register_exception_handlers(app)
     app.include_router(health_router)
     app.include_router(documents_router)
+    app.include_router(ingestion_router)
 
     FastAPIInstrumentor.instrument_app(app)
     return app

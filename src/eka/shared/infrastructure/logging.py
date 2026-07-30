@@ -7,12 +7,13 @@ from __future__ import annotations
 
 import logging
 import sys
+from typing import Any, cast
 
 import structlog
 
 
 def configure_logging(*, level: str = "INFO", json_logs: bool = True) -> None:
-    processors: list = [
+    processors: list[Any] = [
         structlog.contextvars.merge_contextvars,
         structlog.processors.add_log_level,
         structlog.processors.TimeStamper(fmt="iso", utc=True),
@@ -37,4 +38,4 @@ def configure_logging(*, level: str = "INFO", json_logs: bool = True) -> None:
 
 
 def get_logger(name: str | None = None) -> structlog.stdlib.BoundLogger:
-    return structlog.get_logger(name)
+    return cast("structlog.stdlib.BoundLogger", structlog.get_logger(name))

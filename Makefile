@@ -1,4 +1,4 @@
-.PHONY: install lint type test test-unit migrate run up down
+.PHONY: install lint type test test-unit migrate run worker up down
 
 install:
 	pip install -e ".[dev]"
@@ -21,6 +21,9 @@ migrate:
 
 run:
 	uvicorn eka.main:app --reload
+
+worker:
+	python -m eka.worker
 
 up:
 	docker compose up --build

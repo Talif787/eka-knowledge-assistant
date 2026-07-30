@@ -7,6 +7,8 @@ which suits a modular monolith of this size.
 from __future__ import annotations
 
 import uuid
+from collections.abc import AsyncGenerator
+from typing import cast
 
 from fastapi import Depends, Header, Request
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
@@ -24,11 +26,11 @@ from eka.modules.documents.infrastructure.unit_of_work import SqlAlchemyUnitOfWo
 
 
 def get_engine(request: Request) -> AsyncEngine:
-    return request.app.state.engine
+    return cast(AsyncEngine, request.app.state.engine)
 
 
 def get_session_factory(request: Request) -> async_sessionmaker[AsyncSession]:
-    return request.app.state.session_factory
+    return cast("async_sessionmaker[AsyncSession]", request.app.state.session_factory)
 
 
 def get_unit_of_work(
@@ -39,7 +41,7 @@ def get_unit_of_work(
 
 async def get_read_session(
     session_factory: async_sessionmaker[AsyncSession] = Depends(get_session_factory),
-) -> AsyncSession:
+) -> AsyncGenerator[AsyncSession, None]:
     async with session_factory() as session:
         yield session
 
@@ -75,3 +77,51 @@ def list_documents_handler(
     session: AsyncSession = Depends(get_read_session),
 ) -> ListDocumentsHandler:
     return ListDocumentsHandler(SqlAlchemyDocumentRepository(session))
+
+
+# --- Ingestion context wiring (Phase 2) ---
+from eka.config import get_settings  # noqa: E402
+from eka.modules.ingestion.application.content import (  # noqa: E402
+    UploadDocumentContentHandler,
+)
+from eka.modules.ingestion.application.job_queries import ListJobsHandler  # noqa: E402
+from eka.modules.ingestion.infrastructure.queue import SqlAlchemyJobQueue  # noqa: E402
+from eka.modules.ingestion.infrastructure.repository import (  # noqa: E402
+    SqlAlchemyChunkRepository,
+)
+from eka.modules.ingestion.infrastructure.unit_of_work import (  # noqa: E402
+    SqlAlchemyIngestionUnitOfWork,
+)
+
+
+def get_job_queue(
+    session_factory: async_sessionmaker[AsyncSession] = Depends(get_session_factory),
+) -> SqlAlchemyJobQueue:
+    return SqlAlchemyJobQueue(session_factory)
+
+
+def upload_content_handler(
+    session: AsyncSession = Depends(get_read_session),
+    session_factory: async_sessionmaker[AsyncSession] = Depends(get_session_factory),
+    queue: SqlAlchemyJobQueue = Depends(get_job_queue),
+) -> UploadDocumentContentHandler:
+    from eka.modules.documents.application.queries import GetDocumentHandler
+
+    return UploadDocumentContentHandler(
+        get_document=GetDocumentHandler(SqlAlchemyDocumentRepository(session)),
+        uow_factory=lambda: SqlAlchemyIngestionUnitOfWork(session_factory),
+        queue=queue,
+        max_attempts=get_settings().ingestion_max_attempts,
+    )
+
+
+def ingestion_chunk_repository(
+    session: AsyncSession = Depends(get_read_session),
+) -> SqlAlchemyChunkRepository:
+    return SqlAlchemyChunkRepository(session)
+
+
+def ingestion_list_jobs(
+    session: AsyncSession = Depends(get_read_session),
+) -> ListJobsHandler:
+    return ListJobsHandler(session)

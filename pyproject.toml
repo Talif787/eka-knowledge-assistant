@@ -29,6 +29,7 @@ dev = [
 
 [project.scripts]
 eka = "eka.main:run"
+eka-worker = "eka.worker:run"
 
 [build-system]
 requires = ["hatchling"]
@@ -49,6 +50,23 @@ target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM", "C4"]
+# UP046: keep typing.Generic[T] rather than PEP 695 generics for mypy 1.10 compatibility.
+ignore = ["UP046"]
+
+[tool.ruff.lint.flake8-bugbear]
+# FastAPI's dependency-injection markers are designed to be evaluated as argument
+# defaults, so they are not the B008 mutable-default footgun.
+extend-immutable-calls = [
+    "fastapi.Depends",
+    "fastapi.Query",
+    "fastapi.Header",
+    "fastapi.Path",
+    "fastapi.Body",
+    "fastapi.Cookie",
+    "fastapi.Form",
+    "fastapi.File",
+    "fastapi.Security",
+]
 
 [tool.mypy]
 python_version = "3.12"

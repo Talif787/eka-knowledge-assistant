@@ -30,3 +30,16 @@ services:
     command: >
       sh -c "alembic upgrade head &&
              uvicorn eka.main:app --host 0.0.0.0 --port 8000"
+
+  worker:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    environment:
+      EKA_ENVIRONMENT: development
+      EKA_DATABASE_DSN: postgresql+asyncpg://eka:eka@db:5432/eka
+      EKA_WORKER_ID: worker-compose-1
+    depends_on:
+      db:
+        condition: service_healthy
+    command: ["python", "-m", "eka.worker"]

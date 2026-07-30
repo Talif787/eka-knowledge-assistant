@@ -1,28 +1,29 @@
-"""Concrete SQLAlchemy Unit of Work.
-
-Opens a session-scoped transaction, exposes the module repositories, and
-guarantees rollback on failure so partial writes never persist.
-"""
+"""SQLAlchemy Unit of Work for the ingestion context."""
 from __future__ import annotations
 
 from types import TracebackType
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from eka.modules.documents.domain.repository import DocumentRepository
-from eka.modules.documents.infrastructure.repository import SqlAlchemyDocumentRepository
+from eka.modules.ingestion.application.ports import ChunkRepository, ContentStore
+from eka.modules.ingestion.infrastructure.repository import (
+    SqlAlchemyChunkRepository,
+    SqlAlchemyContentStore,
+)
 
 
-class SqlAlchemyUnitOfWork:
-    documents: DocumentRepository
+class SqlAlchemyIngestionUnitOfWork:
+    chunks: ChunkRepository
+    content: ContentStore
 
     def __init__(self, session_factory: async_sessionmaker[AsyncSession]) -> None:
         self._session_factory = session_factory
         self._session: AsyncSession | None = None
 
-    async def __aenter__(self) -> SqlAlchemyUnitOfWork:
+    async def __aenter__(self) -> SqlAlchemyIngestionUnitOfWork:
         self._session = self._session_factory()
-        self.documents = SqlAlchemyDocumentRepository(self._session)
+        self.chunks = SqlAlchemyChunkRepository(self._session)
+        self.content = SqlAlchemyContentStore(self._session)
         return self
 
     async def __aexit__(

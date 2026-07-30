@@ -87,6 +87,9 @@ at startup. See `.env.example` and `docs/CONFIGURATION.md`.
 | DELETE | /v1/documents/{id}      | Soft-delete a document           |
 | GET    | /health/live            | Liveness probe                   |
 | GET    | /health/ready           | Readiness probe (checks DB)      |
+| POST   | /v1/documents/{id}/content | Upload text, verify hash, enqueue ingestion |
+| GET    | /v1/documents/{id}/chunks  | List chunks produced for a document |
+| GET    | /v1/ingestion/jobs         | List ingestion jobs (status, DLQ)   |
 
 Registration is idempotent by `(tenant_id, content_hash)`: a repeated request
 for identical content returns the existing document instead of duplicating it.
@@ -94,7 +97,8 @@ for identical content returns the existing document instead of duplicating it.
 ## Deployment
 
 The service is containerized (multi-stage, non-root) and ships with a health
-check. Kubernetes manifests, Helm chart, and Terraform arrive in Phase 7. Run
+check. Kubernetes manifests, Helm chart, and Terraform arrive in Phase 7. Run the worker alongside the API to process ingestion jobs (`make worker` or the
+compose `worker` service). Run
 `alembic upgrade head` before starting the API; migrations are backward
 compatible (expand-then-contract) so rollbacks are safe.
 
@@ -105,8 +109,8 @@ drift, tracing not exporting) and their resolutions.
 
 ## Roadmap
 
-1. Documents context foundation (this phase).
-2. Ingestion pipeline: chunking, embedding port, async workers, DLQ, idempotency.
+1. Documents context foundation (done).
+2. Ingestion pipeline: chunking, embedding port, async worker, DLQ, idempotency (done).
 3. Retrieval: hybrid search (pgvector + full text), re-ranking, Redis caching.
 4. Generation: prompt assembly, LLM port, SSE streaming, citations, guardrails.
 5. AuthN/AuthZ: OIDC/JWT, RBAC + ABAC, retrieval-time ACL enforcement.
