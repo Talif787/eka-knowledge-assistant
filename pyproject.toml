@@ -29,6 +29,7 @@ dev = [
 
 [project.scripts]
 eka = "eka.main:run"
+eka-worker = "eka.worker:run"
 
 [build-system]
 requires = ["hatchling"]
