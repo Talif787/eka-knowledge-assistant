@@ -30,6 +30,14 @@ class Settings(BaseSettings):
 
     api_root_path: str = Field(default="")
 
+    embedding_dimension: int = Field(default=384, ge=8, le=4096)
+    chunk_size: int = Field(default=800, ge=64)
+    chunk_overlap: int = Field(default=120, ge=0)
+    ingestion_max_attempts: int = Field(default=5, ge=1, le=20)
+    worker_id: str = Field(default="worker-1")
+    worker_batch_size: int = Field(default=5, ge=1, le=100)
+    worker_poll_interval_seconds: float = Field(default=1.0, gt=0)
+
     @property
     def is_production(self) -> bool:
         return self.environment.lower() == "production"

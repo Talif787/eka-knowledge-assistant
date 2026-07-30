@@ -75,3 +75,49 @@ def list_documents_handler(
     session: AsyncSession = Depends(get_read_session),
 ) -> ListDocumentsHandler:
     return ListDocumentsHandler(SqlAlchemyDocumentRepository(session))
+
+
+# --- Ingestion context wiring (Phase 2) ---
+from eka.config import get_settings  # noqa: E402
+from eka.modules.ingestion.application.content import (  # noqa: E402
+    UploadDocumentContentHandler,
+)
+from eka.modules.ingestion.application.job_queries import ListJobsHandler  # noqa: E402
+from eka.modules.ingestion.infrastructure.queue import SqlAlchemyJobQueue  # noqa: E402
+from eka.modules.ingestion.infrastructure.repository import (  # noqa: E402
+    SqlAlchemyChunkRepository,
+)
+from eka.modules.ingestion.infrastructure.unit_of_work import (  # noqa: E402
+    SqlAlchemyIngestionUnitOfWork,
+)
+
+
+def get_job_queue(
+    session_factory: async_sessionmaker[AsyncSession] = Depends(get_session_factory),
+) -> SqlAlchemyJobQueue:
+    return SqlAlchemyJobQueue(session_factory)
+
+
+def upload_content_handler(
+    session: AsyncSession = Depends(get_read_session),
+    session_factory: async_sessionmaker[AsyncSession] = Depends(get_session_factory),
+    queue: SqlAlchemyJobQueue = Depends(get_job_queue),
+) -> UploadDocumentContentHandler:
+    from eka.modules.documents.application.queries import GetDocumentHandler
+
+    return UploadDocumentContentHandler(
+        get_document=GetDocumentHandler(SqlAlchemyDocumentRepository(session)),
+        uow_factory=lambda: SqlAlchemyIngestionUnitOfWork(session_factory),
+        queue=queue,
+        max_attempts=get_settings().ingestion_max_attempts,
+    )
+
+
+def ingestion_list_chunks(session: AsyncSession = Depends(get_read_session)):
+    return SqlAlchemyChunkRepository(session).list_for_document
+
+
+def ingestion_list_jobs(
+    session: AsyncSession = Depends(get_read_session),
+) -> ListJobsHandler:
+    return ListJobsHandler(session)
