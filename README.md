@@ -91,6 +91,7 @@ at startup. See `.env.example` and `docs/CONFIGURATION.md`.
 | GET    | /v1/documents/{id}/chunks  | List chunks produced for a document |
 | GET    | /v1/ingestion/jobs         | List ingestion jobs (status, DLQ)   |
 | POST   | /v1/search                 | Hybrid search: vector + keyword, reranked, cached |
+| POST   | /v1/answer                 | Grounded, cited answer streamed as SSE |
 
 Registration is idempotent by `(tenant_id, content_hash)`: a repeated request
 for identical content returns the existing document instead of duplicating it.
@@ -113,7 +114,7 @@ drift, tracing not exporting) and their resolutions.
 1. Documents context foundation (done).
 2. Ingestion pipeline: chunking, embedding port, async worker, DLQ, idempotency (done).
 3. Retrieval: hybrid search (pgvector + full text), re-ranking, Redis caching (done).
-4. Generation: prompt assembly, LLM port, SSE streaming, citations, guardrails.
+4. Generation: prompt assembly, LLM port, SSE streaming, citations, guardrails (done).
 5. AuthN/AuthZ: OIDC/JWT, RBAC + ABAC, retrieval-time ACL enforcement.
 6. Evaluation harness and CI quality gate.
 7. Observability depth, Kubernetes/Helm, Terraform, full operational docs.
