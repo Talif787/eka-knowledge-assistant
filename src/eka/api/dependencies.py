@@ -125,3 +125,55 @@ def ingestion_list_jobs(
     session: AsyncSession = Depends(get_read_session),
 ) -> ListJobsHandler:
     return ListJobsHandler(session)
+
+
+# --- Retrieval context wiring (Phase 3) ---
+from redis.asyncio import Redis  # noqa: E402
+
+from eka.modules.ingestion.domain.embedding import EmbeddingModel  # noqa: E402
+from eka.modules.retrieval.application.search import SearchHandler  # noqa: E402
+from eka.modules.retrieval.domain.search import Reranker  # noqa: E402
+from eka.modules.retrieval.infrastructure.pgvector_retriever import (  # noqa: E402
+    PgVectorHybridRetriever,
+)
+from eka.modules.retrieval.infrastructure.redis_cache import RedisSearchCache  # noqa: E402
+
+
+def get_embedding_model(request: Request) -> EmbeddingModel:
+    return cast(EmbeddingModel, request.app.state.embedding_model)
+
+
+def get_reranker(request: Request) -> Reranker:
+    return cast(Reranker, request.app.state.reranker)
+
+
+def get_redis(request: Request) -> Redis:
+    return cast(Redis, request.app.state.redis)
+
+
+def get_retriever(
+    session: AsyncSession = Depends(get_read_session),
+) -> PgVectorHybridRetriever:
+    return PgVectorHybridRetriever(session)
+
+
+def get_search_cache(redis: Redis = Depends(get_redis)) -> RedisSearchCache:
+    return RedisSearchCache(redis)
+
+
+def search_handler(
+    embedder: EmbeddingModel = Depends(get_embedding_model),
+    retriever: PgVectorHybridRetriever = Depends(get_retriever),
+    reranker: Reranker = Depends(get_reranker),
+    cache: RedisSearchCache = Depends(get_search_cache),
+) -> SearchHandler:
+    settings = get_settings()
+    return SearchHandler(
+        embedder=embedder,
+        retriever=retriever,
+        reranker=reranker,
+        cache=cache,
+        pool_size=settings.search_pool_size,
+        cache_ttl_seconds=settings.search_cache_ttl_seconds,
+    )
+
