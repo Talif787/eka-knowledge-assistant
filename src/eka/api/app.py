@@ -22,6 +22,10 @@ from eka.api.middleware import (
 )
 from eka.config import Settings, get_settings
 from eka.modules.documents.presentation.router import router as documents_router
+from eka.modules.generation.infrastructure.local_llm import (
+    LocalTemplateLanguageModel,
+)
+from eka.modules.generation.presentation.router import router as generation_router
 from eka.modules.ingestion.infrastructure.embedding import HashingEmbeddingModel
 from eka.modules.ingestion.presentation.router import router as ingestion_router
 from eka.modules.retrieval.infrastructure.reranker import LexicalReranker
@@ -53,9 +57,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         app.state.redis = Redis.from_url(settings.redis_url)
         app.state.embedding_model = HashingEmbeddingModel(settings.embedding_dimension)
         app.state.reranker = LexicalReranker()
-        app.state.redis = Redis.from_url(settings.redis_url)
-        app.state.embedding_model = HashingEmbeddingModel(settings.embedding_dimension)
-        app.state.reranker = LexicalReranker()
+        app.state.language_model = LocalTemplateLanguageModel()
         SQLAlchemyInstrumentor().instrument(engine=engine.sync_engine)
         logger.info("application_started", environment=settings.environment)
         try:
@@ -81,6 +83,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(documents_router)
     app.include_router(ingestion_router)
     app.include_router(retrieval_router)
+    app.include_router(generation_router)
 
     FastAPIInstrumentor.instrument_app(app)
     return app

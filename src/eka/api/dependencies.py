@@ -177,3 +177,24 @@ def search_handler(
         cache_ttl_seconds=settings.search_cache_ttl_seconds,
     )
 
+# --- Generation context wiring (Phase 4) ---
+from eka.modules.generation.application.generate import (  # noqa: E402
+    GenerateAnswerHandler,
+)
+from eka.modules.generation.domain.answer import LanguageModel  # noqa: E402
+from eka.modules.generation.domain.guardrails import PromptInjectionGuard  # noqa: E402
+
+
+def get_language_model(request: Request) -> LanguageModel:
+    return cast(LanguageModel, request.app.state.language_model)
+
+
+def generate_answer_handler(
+    searcher: SearchHandler = Depends(search_handler),
+    language_model: LanguageModel = Depends(get_language_model),
+) -> GenerateAnswerHandler:
+    return GenerateAnswerHandler(
+        searcher=searcher,
+        guard=PromptInjectionGuard(),
+        language_model=language_model,
+    )
