@@ -25,10 +25,12 @@ jobs:
           python-version: "3.12"
       - run: pip install -e ".[dev]"
       - name: Lint
-        run: ruff check src tests
+        run: ruff check src tests scripts
       - name: Type check
         run: mypy src
       - name: Test
         env:
           EKA_TEST_DATABASE_DSN: postgresql+asyncpg://eka:eka@localhost:5432/eka_test
         run: pytest --maxfail=1
+      - name: Evaluate
+        run: python scripts/run_eval.py

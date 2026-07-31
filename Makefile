@@ -1,11 +1,11 @@
-.PHONY: install lint type test test-unit migrate run worker up down
+.PHONY: install lint type test test-unit eval migrate run worker up down
 
 install:
 	pip install -e ".[dev]"
 
 lint:
-	ruff check src tests
-	ruff format --check src tests
+	ruff check src tests scripts
+	ruff format --check src tests scripts
 
 type:
 	mypy src
@@ -15,6 +15,9 @@ test-unit:
 
 test:
 	pytest
+
+eval:
+	python scripts/run_eval.py
 
 migrate:
 	alembic upgrade head
