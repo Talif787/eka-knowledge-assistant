@@ -1,6 +1,6 @@
 services:
   db:
-    image: postgres:16-alpine
+    image: pgvector/pgvector:pg16
     environment:
       POSTGRES_USER: eka
       POSTGRES_PASSWORD: eka
@@ -23,10 +23,13 @@ services:
     environment:
       EKA_ENVIRONMENT: development
       EKA_DATABASE_DSN: postgresql+asyncpg://eka:eka@db:5432/eka
+      EKA_REDIS_URL: redis://redis:6379/0
     ports: ["8000:8000"]
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_started
     command: >
       sh -c "alembic upgrade head &&
              uvicorn eka.main:app --host 0.0.0.0 --port 8000"
