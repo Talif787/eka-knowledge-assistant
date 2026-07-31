@@ -38,6 +38,11 @@ class Settings(BaseSettings):
     worker_batch_size: int = Field(default=5, ge=1, le=100)
     worker_poll_interval_seconds: float = Field(default=1.0, gt=0)
 
+    redis_url: str = Field(default="redis://localhost:6379/0")
+    search_cache_ttl_seconds: int = Field(default=300, ge=0)
+    search_pool_size: int = Field(default=50, ge=1, le=500)
+    search_default_top_k: int = Field(default=5, ge=1, le=50)
+
     @property
     def is_production(self) -> bool:
         return self.environment.lower() == "production"

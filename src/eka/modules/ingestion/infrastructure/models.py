@@ -9,7 +9,9 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
+from pgvector.sqlalchemy import Vector
 from sqlalchemy import (
+    Computed,
     DateTime,
     Index,
     Integer,
@@ -17,11 +19,13 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
 )
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import TSVECTOR
 from sqlalchemy.dialects.postgresql import UUID as PgUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from eka.shared.infrastructure.database import Base
+
+EMBEDDING_DIM = 384
 
 
 class DocumentContentModel(Base):
@@ -40,6 +44,13 @@ class ChunkModel(Base):
         UniqueConstraint("document_id", "ordinal", name="uq_chunks_document_ordinal"),
         Index("ix_chunks_tenant_document", "tenant_id", "document_id"),
         Index("ix_chunks_tenant_collection", "tenant_id", "collection_id"),
+        Index(
+            "ix_chunks_embedding_hnsw",
+            "embedding",
+            postgresql_using="hnsw",
+            postgresql_ops={"embedding": "vector_cosine_ops"},
+        ),
+        Index("ix_chunks_text_tsv", "text_tsv", postgresql_using="gin"),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(PgUUID(as_uuid=True), primary_key=True)
@@ -49,7 +60,10 @@ class ChunkModel(Base):
     document_version: Mapped[int] = mapped_column(Integer, nullable=False)
     ordinal: Mapped[int] = mapped_column(Integer, nullable=False)
     text: Mapped[str] = mapped_column(Text, nullable=False)
-    embedding: Mapped[list[float]] = mapped_column(JSONB, nullable=False)
+    embedding: Mapped[list[float]] = mapped_column(Vector(EMBEDDING_DIM), nullable=False)
+    text_tsv: Mapped[str] = mapped_column(
+        TSVECTOR, Computed("to_tsvector('english', text)", persisted=True)
+    )
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
 

@@ -11,6 +11,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
+from redis.asyncio import Redis
 
 from eka.api.errors import register_exception_handlers
 from eka.api.health import router as health_router
@@ -21,7 +22,10 @@ from eka.api.middleware import (
 )
 from eka.config import Settings, get_settings
 from eka.modules.documents.presentation.router import router as documents_router
+from eka.modules.ingestion.infrastructure.embedding import HashingEmbeddingModel
 from eka.modules.ingestion.presentation.router import router as ingestion_router
+from eka.modules.retrieval.infrastructure.reranker import LexicalReranker
+from eka.modules.retrieval.presentation.router import router as retrieval_router
 from eka.shared.infrastructure.database import create_engine, create_session_factory
 from eka.shared.infrastructure.logging import configure_logging, get_logger
 from eka.shared.infrastructure.observability import configure_tracing
@@ -46,11 +50,18 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         )
         app.state.engine = engine
         app.state.session_factory = create_session_factory(engine)
+        app.state.redis = Redis.from_url(settings.redis_url)
+        app.state.embedding_model = HashingEmbeddingModel(settings.embedding_dimension)
+        app.state.reranker = LexicalReranker()
+        app.state.redis = Redis.from_url(settings.redis_url)
+        app.state.embedding_model = HashingEmbeddingModel(settings.embedding_dimension)
+        app.state.reranker = LexicalReranker()
         SQLAlchemyInstrumentor().instrument(engine=engine.sync_engine)
         logger.info("application_started", environment=settings.environment)
         try:
             yield
         finally:
+            await app.state.redis.aclose()
             await engine.dispose()
             logger.info("application_stopped")
 
@@ -69,6 +80,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(health_router)
     app.include_router(documents_router)
     app.include_router(ingestion_router)
+    app.include_router(retrieval_router)
 
     FastAPIInstrumentor.instrument_app(app)
     return app
