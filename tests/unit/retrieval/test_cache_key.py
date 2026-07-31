@@ -1,4 +1,5 @@
 """Unit tests for the ACL-aware cache key (pure, offline)."""
+
 from __future__ import annotations
 
 import uuid

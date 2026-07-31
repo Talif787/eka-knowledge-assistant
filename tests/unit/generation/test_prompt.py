@@ -1,4 +1,5 @@
 """Unit tests for grounded prompt assembly (pure, offline)."""
+
 from __future__ import annotations
 
 import uuid

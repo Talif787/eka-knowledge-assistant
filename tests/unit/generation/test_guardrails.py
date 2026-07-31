@@ -1,4 +1,5 @@
 """Unit tests for the prompt-injection guard (pure, offline)."""
+
 from __future__ import annotations
 
 from eka.modules.generation.domain.guardrails import PromptInjectionGuard

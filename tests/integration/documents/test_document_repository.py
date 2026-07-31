@@ -3,6 +3,7 @@
 Requires a live Postgres. Run with:
     EKA_TEST_DATABASE_DSN=postgresql+asyncpg://eka:eka@localhost:5432/eka_test pytest
 """
+
 from __future__ import annotations
 
 import uuid

@@ -3,6 +3,7 @@
 Registers a document, stores matching content, runs the pipeline, and asserts the
 document is INDEXED with chunks persisted. Requires a live Postgres.
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -48,8 +49,11 @@ async def test_pipeline_indexes_document_and_persists_chunks(session_factory) ->
     content_hash = hashlib.sha256(CONTENT.encode()).hexdigest()
 
     doc = Document.register(
-        tenant_id=tenant, collection_id=collection, title=Title("Guide"),
-        source_type=SourceType.UPLOAD, source_uri="s3://b/k",
+        tenant_id=tenant,
+        collection_id=collection,
+        title=Title("Guide"),
+        source_type=SourceType.UPLOAD,
+        source_uri="s3://b/k",
         content_hash=ContentHash(content_hash),
     )
     async with session_factory() as s:
@@ -64,8 +68,13 @@ async def test_pipeline_indexes_document_and_persists_chunks(session_factory) ->
         embedder=HashingEmbeddingModel(dimension=384),
     )
     job = IngestionJob(
-        id=uuid.uuid4(), tenant_id=tenant, document_id=doc.id, collection_id=collection,
-        document_version=1, attempts=0, max_attempts=5,
+        id=uuid.uuid4(),
+        tenant_id=tenant,
+        document_id=doc.id,
+        collection_id=collection,
+        document_version=1,
+        attempts=0,
+        max_attempts=5,
     )
     await handler.handle(job)
 
@@ -81,8 +90,11 @@ async def test_pipeline_is_idempotent_on_rerun(session_factory) -> None:
     tenant, collection = uuid.uuid4(), uuid.uuid4()
     content_hash = hashlib.sha256(CONTENT.encode()).hexdigest()
     doc = Document.register(
-        tenant_id=tenant, collection_id=collection, title=Title("Guide"),
-        source_type=SourceType.UPLOAD, source_uri="s3://b/k",
+        tenant_id=tenant,
+        collection_id=collection,
+        title=Title("Guide"),
+        source_type=SourceType.UPLOAD,
+        source_uri="s3://b/k",
         content_hash=ContentHash(content_hash),
     )
     async with session_factory() as s:
@@ -97,8 +109,13 @@ async def test_pipeline_is_idempotent_on_rerun(session_factory) -> None:
         embedder=HashingEmbeddingModel(dimension=384),
     )
     job = IngestionJob(
-        id=uuid.uuid4(), tenant_id=tenant, document_id=doc.id, collection_id=collection,
-        document_version=1, attempts=0, max_attempts=5,
+        id=uuid.uuid4(),
+        tenant_id=tenant,
+        document_id=doc.id,
+        collection_id=collection,
+        document_version=1,
+        attempts=0,
+        max_attempts=5,
     )
     await handler.handle(job)
     async with session_factory() as s:

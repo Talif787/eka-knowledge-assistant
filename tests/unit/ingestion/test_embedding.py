@@ -1,4 +1,5 @@
 """Unit tests for the embedding value object and local model (pure, offline)."""
+
 from __future__ import annotations
 
 import asyncio

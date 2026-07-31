@@ -1,4 +1,5 @@
 """Unit tests for Reciprocal Rank Fusion (pure, offline)."""
+
 from __future__ import annotations
 
 import uuid

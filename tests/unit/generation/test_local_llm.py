@@ -1,4 +1,5 @@
 """Unit tests for the local language model stand-in (offline)."""
+
 from __future__ import annotations
 
 import asyncio

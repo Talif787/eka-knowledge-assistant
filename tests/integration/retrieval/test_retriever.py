@@ -1,4 +1,5 @@
 """Integration tests for the hybrid pgvector retriever. Requires Postgres+pgvector."""
+
 from __future__ import annotations
 
 import uuid
@@ -22,8 +23,13 @@ EMBEDDER = HashingEmbeddingModel(dimension=384)
 async def _seed(session_factory, tenant, collection, document_id, chunk_text) -> None:
     embedding = (await EMBEDDER.embed([chunk_text]))[0]
     chunk = Chunk.create(
-        tenant_id=tenant, document_id=document_id, collection_id=collection,
-        document_version=1, ordinal=0, text=chunk_text, embedding=embedding,
+        tenant_id=tenant,
+        document_id=document_id,
+        collection_id=collection,
+        document_version=1,
+        ordinal=0,
+        text=chunk_text,
+        embedding=embedding,
     )
     async with session_factory() as s:
         await SqlAlchemyChunkRepository(s).replace_for_document(tenant, document_id, [chunk])

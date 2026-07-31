@@ -1,4 +1,5 @@
 """Unit tests for the auth dependency. Requires PyJWT and FastAPI (CI)."""
+
 from __future__ import annotations
 
 import uuid

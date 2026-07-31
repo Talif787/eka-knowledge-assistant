@@ -1,4 +1,5 @@
 """Unit tests for the in-memory search cache (offline)."""
+
 from __future__ import annotations
 
 import asyncio

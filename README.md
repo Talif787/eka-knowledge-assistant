@@ -72,12 +72,20 @@ Unit tests cover domain invariants and the document state machine. Integration
 tests exercise the repository against a disposable Postgres. They are skipped
 automatically when `EKA_TEST_DATABASE_DSN` is unset.
 
+The answer-quality gate runs offline and needs no database:
+
+```bash
+python scripts/run_eval.py     # scores retrieval and grounding, gates on thresholds
+```
+
+It runs in CI after the tests. See `docs/EVALUATION.md`.
+
 ## Configuration
 
 All settings are read from the environment with the `EKA_` prefix and validated
 at startup. See `.env.example` and `docs/CONFIGURATION.md`.
 
-## API surface (Phase 1)
+## API surface
 
 | Method | Path                    | Purpose                          |
 |--------|-------------------------|----------------------------------|
@@ -110,7 +118,8 @@ compatible (expand-then-contract) so rollbacks are safe.
 ## Troubleshooting and runbook
 
 See `docs/RUNBOOK.md` for common failure modes (readiness failing, migration
-drift, tracing not exporting) and their resolutions.
+drift, tracing not exporting) and their resolutions. For logs, traces, and
+metrics, see `docs/OBSERVABILITY.md`.
 
 ## Roadmap
 
@@ -119,5 +128,5 @@ drift, tracing not exporting) and their resolutions.
 3. Retrieval: hybrid search (pgvector + full text), re-ranking, Redis caching (done).
 4. Generation: prompt assembly, LLM port, SSE streaming, citations, guardrails (done).
 5. AuthN/AuthZ: OIDC/JWT, RBAC + ABAC, retrieval-time ACL enforcement (JWT done).
-6. Evaluation harness and CI quality gate.
-7. Observability depth, Kubernetes/Helm, Terraform, full operational docs.
+6. Evaluation harness and CI quality gate (done).
+7. Observability depth (metrics done), Kubernetes/Helm, Terraform, full operational docs.
