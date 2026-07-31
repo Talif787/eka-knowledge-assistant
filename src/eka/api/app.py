@@ -26,6 +26,7 @@ from eka.modules.generation.infrastructure.local_llm import (
     LocalTemplateLanguageModel,
 )
 from eka.modules.generation.presentation.router import router as generation_router
+from eka.modules.identity.presentation.router import router as auth_router
 from eka.modules.ingestion.infrastructure.embedding import HashingEmbeddingModel
 from eka.modules.ingestion.presentation.router import router as ingestion_router
 from eka.modules.retrieval.infrastructure.reranker import LexicalReranker
@@ -80,6 +81,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     register_exception_handlers(app)
     app.include_router(health_router)
+    app.include_router(auth_router)
     app.include_router(documents_router)
     app.include_router(ingestion_router)
     app.include_router(retrieval_router)
