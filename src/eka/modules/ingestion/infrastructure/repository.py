@@ -22,7 +22,7 @@ def _to_domain(model: ChunkModel) -> Chunk:
         document_version=model.document_version,
         ordinal=model.ordinal,
         text=ChunkText(model.text),
-        embedding=Embedding(tuple(model.embedding)),
+        embedding=Embedding(tuple(float(v) for v in model.embedding)),
     )
 
 
