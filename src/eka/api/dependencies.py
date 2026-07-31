@@ -10,9 +10,10 @@ import uuid
 from collections.abc import AsyncGenerator
 from typing import cast
 
-from fastapi import Depends, Header, Request
+from fastapi import Depends, Request
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
+from eka.api.security import get_current_identity
 from eka.modules.documents.application.commands import (
     DeleteDocumentHandler,
     RegisterDocumentHandler,
@@ -23,6 +24,7 @@ from eka.modules.documents.application.queries import (
 )
 from eka.modules.documents.infrastructure.repository import SqlAlchemyDocumentRepository
 from eka.modules.documents.infrastructure.unit_of_work import SqlAlchemyUnitOfWork
+from eka.modules.identity.domain.identity import AuthenticatedIdentity
 
 
 def get_engine(request: Request) -> AsyncEngine:
@@ -46,13 +48,11 @@ async def get_read_session(
         yield session
 
 
-def get_tenant_id(x_tenant_id: uuid.UUID = Header(alias="X-Tenant-ID")) -> uuid.UUID:
-    """Resolve the tenant from a header.
-
-    A placeholder for Phase 5, where the tenant is derived from the verified JWT
-    rather than trusted from a client header.
-    """
-    return x_tenant_id
+def get_tenant_id(
+    identity: AuthenticatedIdentity = Depends(get_current_identity),
+) -> uuid.UUID:
+    """Resolve the tenant from the verified identity (derived from the JWT)."""
+    return identity.tenant_id
 
 
 def register_document_handler(

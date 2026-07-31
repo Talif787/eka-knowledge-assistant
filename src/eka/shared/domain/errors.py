@@ -33,3 +33,7 @@ class NotFoundError(DomainError):
 
 class ConflictError(DomainError):
     code = "conflict"
+
+
+class AuthenticationError(DomainError):
+    code = "authentication_error"

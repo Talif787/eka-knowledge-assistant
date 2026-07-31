@@ -42,6 +42,11 @@ class Settings(BaseSettings):
     search_cache_ttl_seconds: int = Field(default=300, ge=0)
     search_pool_size: int = Field(default=50, ge=1, le=500)
     search_default_top_k: int = Field(default=5, ge=1, le=50)
+    jwt_secret: str = Field(default="dev-only-insecure-secret-change-me-in-production")
+    jwt_algorithm: str = Field(default="HS256")
+    jwt_issuer: str = Field(default="eka")
+    jwt_access_ttl_seconds: int = Field(default=3600, ge=60)
+    auth_dev_token_enabled: bool = Field(default=True)
 
     @property
     def is_production(self) -> bool:

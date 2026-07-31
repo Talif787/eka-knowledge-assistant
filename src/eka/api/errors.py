@@ -10,6 +10,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 from eka.shared.domain.errors import (
+    AuthenticationError,
     ConflictError,
     DomainError,
     NotFoundError,
@@ -21,6 +22,7 @@ from eka.shared.infrastructure.logging import get_logger
 logger = get_logger(__name__)
 
 _STATUS_BY_CODE: dict[type[DomainError], int] = {
+    AuthenticationError: status.HTTP_401_UNAUTHORIZED,
     ValidationError: status.HTTP_422_UNPROCESSABLE_CONTENT,
     StateTransitionError: status.HTTP_409_CONFLICT,
     ConflictError: status.HTTP_409_CONFLICT,
