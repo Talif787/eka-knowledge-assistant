@@ -1,4 +1,5 @@
 """Integration: answers grounded in real retrieved chunks. Requires Postgres+pgvector."""
+
 from __future__ import annotations
 
 import uuid
@@ -29,8 +30,13 @@ EMBEDDER = HashingEmbeddingModel(dimension=384)
 async def _seed(session_factory, tenant, collection, document_id, text) -> None:
     embedding = (await EMBEDDER.embed([text]))[0]
     chunk = Chunk.create(
-        tenant_id=tenant, document_id=document_id, collection_id=collection,
-        document_version=1, ordinal=0, text=text, embedding=embedding,
+        tenant_id=tenant,
+        document_id=document_id,
+        collection_id=collection,
+        document_version=1,
+        ordinal=0,
+        text=text,
+        embedding=embedding,
     )
     async with session_factory() as s:
         await SqlAlchemyChunkRepository(s).replace_for_document(tenant, document_id, [chunk])
@@ -41,7 +47,10 @@ async def test_answer_grounds_in_retrieved_chunks(session_factory) -> None:
     tenant, collection = uuid.uuid4(), uuid.uuid4()
     d1 = uuid.uuid4()
     await _seed(
-        session_factory, tenant, collection, d1,
+        session_factory,
+        tenant,
+        collection,
+        d1,
         "Databases organize information so it can be queried efficiently.",
     )
     async with session_factory() as s:

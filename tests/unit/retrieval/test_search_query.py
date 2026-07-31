@@ -1,4 +1,5 @@
 """Unit tests for the SearchQuery value object (pure, offline)."""
+
 from __future__ import annotations
 
 import pytest

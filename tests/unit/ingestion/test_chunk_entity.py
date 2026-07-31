@@ -1,4 +1,5 @@
 """Unit tests for the Chunk entity and its text value object (pure, offline)."""
+
 from __future__ import annotations
 
 import uuid

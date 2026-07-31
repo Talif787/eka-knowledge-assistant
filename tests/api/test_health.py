@@ -1,4 +1,5 @@
 """API test for liveness. Requires the app dependencies to be installed."""
+
 from __future__ import annotations
 
 import pytest

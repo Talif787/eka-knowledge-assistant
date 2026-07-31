@@ -4,6 +4,7 @@ The database fixtures target a disposable Postgres (see docker-compose). They ar
 skipped automatically when EKA_TEST_DATABASE_DSN is not set, so unit tests always
 run and integration tests run only where a database is available.
 """
+
 from __future__ import annotations
 
 import os

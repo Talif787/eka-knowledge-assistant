@@ -1,4 +1,5 @@
 """Unit tests for the recursive character chunker (pure, offline)."""
+
 from __future__ import annotations
 
 import pytest

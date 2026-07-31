@@ -3,6 +3,7 @@
 Pure-domain tests: no database, no framework, no I/O. They assert invariants and
 state-machine behavior and run in milliseconds.
 """
+
 from __future__ import annotations
 
 import uuid

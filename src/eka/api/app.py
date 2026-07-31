@@ -3,6 +3,7 @@
 The factory pattern keeps construction testable: tests build an app with
 overridden settings and dependencies without importing a module-level singleton.
 """
+
 from __future__ import annotations
 
 from collections.abc import AsyncIterator
@@ -33,7 +34,10 @@ from eka.modules.retrieval.infrastructure.reranker import LexicalReranker
 from eka.modules.retrieval.presentation.router import router as retrieval_router
 from eka.shared.infrastructure.database import create_engine, create_session_factory
 from eka.shared.infrastructure.logging import configure_logging, get_logger
-from eka.shared.infrastructure.observability import configure_tracing
+from eka.shared.infrastructure.observability import (
+    configure_metrics,
+    configure_tracing,
+)
 
 logger = get_logger(__name__)
 
@@ -42,9 +46,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     settings = settings or get_settings()
 
     configure_logging(level=settings.log_level, json_logs=settings.json_logs)
-    configure_tracing(
-        service_name=settings.service_name, otlp_endpoint=settings.otlp_endpoint
-    )
+    configure_tracing(service_name=settings.service_name, otlp_endpoint=settings.otlp_endpoint)
+    configure_metrics(service_name=settings.service_name, otlp_endpoint=settings.otlp_endpoint)
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:

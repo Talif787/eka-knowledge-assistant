@@ -1,4 +1,5 @@
 """API test for the dev token endpoint. Requires PyJWT and FastAPI (CI)."""
+
 from __future__ import annotations
 
 import uuid

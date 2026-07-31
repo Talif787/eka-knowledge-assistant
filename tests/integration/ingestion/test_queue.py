@@ -3,6 +3,7 @@
 Requires a live Postgres. Exercises idempotent enqueue, SKIP LOCKED dequeue,
 completion, retry scheduling, and the dead-letter transition.
 """
+
 from __future__ import annotations
 
 import uuid
@@ -16,8 +17,13 @@ pytestmark = [pytest.mark.asyncio, requires_db]
 
 
 async def _enqueue(queue: SqlAlchemyJobQueue, tenant, doc, version=1, max_attempts=3):
-    await queue.enqueue(tenant, doc, collection_id=uuid.uuid4(),
-                        document_version=version, max_attempts=max_attempts)
+    await queue.enqueue(
+        tenant,
+        doc,
+        collection_id=uuid.uuid4(),
+        document_version=version,
+        max_attempts=max_attempts,
+    )
 
 
 async def test_enqueue_is_idempotent_per_version(session_factory) -> None:
@@ -57,10 +63,15 @@ async def test_fail_retries_then_dead_letters(session_factory) -> None:
     assert dead is False  # first failure schedules a retry (in the future)
     # simulate the retry attempt reaching max
     from eka.modules.ingestion.application.jobs import IngestionJob
+
     retried = IngestionJob(
-        id=job.id, tenant_id=job.tenant_id, document_id=job.document_id,
-        collection_id=job.collection_id, document_version=job.document_version,
-        attempts=1, max_attempts=2,
+        id=job.id,
+        tenant_id=job.tenant_id,
+        document_id=job.document_id,
+        collection_id=job.collection_id,
+        document_version=job.document_version,
+        attempts=1,
+        max_attempts=2,
     )
     dead = await queue.fail(retried, "boom again")
     assert dead is True

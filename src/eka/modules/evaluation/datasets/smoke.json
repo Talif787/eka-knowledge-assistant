@@ -1,0 +1,24 @@
+{
+  "corpus": [
+    {"id": "databases", "text": "Databases organize information so it can be queried efficiently using structured query languages."},
+    {"id": "indexing", "text": "Indexes trade write cost for read speed by maintaining sorted structures for fast lookups."},
+    {"id": "rag", "text": "Retrieval augmented generation grounds a language model in retrieved passages to reduce hallucination."},
+    {"id": "vectors", "text": "Vector search finds semantically similar text by comparing embedding vectors with cosine distance."},
+    {"id": "chunking", "text": "Chunking splits documents into smaller passages so relevant spans can be embedded and searched."},
+    {"id": "caching", "text": "Caching search results reduces latency by serving repeated queries without recomputation."},
+    {"id": "museum", "text": "The city museum opens at nine in the morning and closes at five in the evening."},
+    {"id": "weather", "text": "A cold front will bring rain and strong winds along the coast through the weekend."},
+    {"id": "recipe", "text": "To bake sourdough, feed the starter, fold the dough, proof overnight, and bake in a hot oven."},
+    {"id": "sports", "text": "The home team scored twice in the second half to win the championship final."},
+    {"id": "travel", "text": "Direct flights between the two cities take about four hours and run twice daily."},
+    {"id": "music", "text": "The orchestra performed a symphony in four movements to a sold out concert hall."}
+  ],
+  "cases": [
+    {"id": "c1", "question": "How do databases let you query information efficiently?", "expected_keywords": ["databases", "query", "efficiently"]},
+    {"id": "c2", "question": "What do indexes trade for faster reads?", "expected_keywords": ["indexes", "write", "read", "speed"]},
+    {"id": "c3", "question": "How does retrieval augmented generation reduce hallucination?", "expected_keywords": ["retrieval", "generation", "passages", "hallucination"]},
+    {"id": "c4", "question": "How does vector search find similar text?", "expected_keywords": ["vector", "embedding", "cosine", "similar"]},
+    {"id": "c5", "question": "Why does chunking split documents into passages?", "expected_keywords": ["chunking", "passages", "embedded"]},
+    {"id": "c6", "question": "How does caching reduce query latency?", "expected_keywords": ["caching", "latency", "queries"]}
+  ]
+}

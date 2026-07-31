@@ -1,4 +1,5 @@
 """Unit tests for JWT issue/verify. Requires PyJWT (installed in CI)."""
+
 from __future__ import annotations
 
 import uuid
