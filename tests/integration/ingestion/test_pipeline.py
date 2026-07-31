@@ -61,7 +61,7 @@ async def test_pipeline_indexes_document_and_persists_chunks(session_factory) ->
         uow_factory=lambda: SqlAlchemyIngestionUnitOfWork(session_factory),
         lifecycle=DocumentLifecycleService(SqlAlchemyUnitOfWork(session_factory)),
         chunker=RecursiveCharacterChunker(ChunkingConfig(chunk_size=200, chunk_overlap=40)),
-        embedder=HashingEmbeddingModel(dimension=64),
+        embedder=HashingEmbeddingModel(dimension=384),
     )
     job = IngestionJob(
         id=uuid.uuid4(), tenant_id=tenant, document_id=doc.id, collection_id=collection,
@@ -73,7 +73,7 @@ async def test_pipeline_indexes_document_and_persists_chunks(session_factory) ->
         chunks = await SqlAlchemyChunkRepository(s).list_for_document(tenant, doc.id)
         reloaded = await SqlAlchemyDocumentRepository(s).get(tenant, doc.id)
     assert len(chunks) > 1
-    assert chunks[0].embedding.dimension == 64
+    assert chunks[0].embedding.dimension == 384
     assert reloaded is not None and reloaded.status is DocumentStatus.INDEXED
 
 
@@ -94,7 +94,7 @@ async def test_pipeline_is_idempotent_on_rerun(session_factory) -> None:
         uow_factory=lambda: SqlAlchemyIngestionUnitOfWork(session_factory),
         lifecycle=DocumentLifecycleService(SqlAlchemyUnitOfWork(session_factory)),
         chunker=RecursiveCharacterChunker(ChunkingConfig(chunk_size=200, chunk_overlap=40)),
-        embedder=HashingEmbeddingModel(dimension=64),
+        embedder=HashingEmbeddingModel(dimension=384),
     )
     job = IngestionJob(
         id=uuid.uuid4(), tenant_id=tenant, document_id=doc.id, collection_id=collection,

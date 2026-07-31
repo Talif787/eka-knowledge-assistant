@@ -18,11 +18,15 @@ requires_db = pytest.mark.skipif(DSN is None, reason="EKA_TEST_DATABASE_DSN not 
 
 @pytest_asyncio.fixture
 async def session_factory() -> AsyncIterator:
+    from sqlalchemy import text
     from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
     from eka.shared.infrastructure.database import Base
 
     engine = create_async_engine(DSN)
+    async with engine.begin() as conn:
+        await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
+        await conn.run_sync(Base.metadata.create_all)
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     try:
