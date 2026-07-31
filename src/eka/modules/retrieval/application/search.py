@@ -4,8 +4,10 @@ The query is embedded with the same model used at ingestion, so query and index
 vectors share a space. Results are cached under an ACL-aware key; a cache failure
 degrades to a live search rather than an error.
 """
+
 from __future__ import annotations
 
+import time
 import uuid
 
 from eka.modules.ingestion.domain.embedding import EmbeddingModel
@@ -18,6 +20,7 @@ from eka.modules.retrieval.domain.search import (
     SearchQuery,
 )
 from eka.shared.infrastructure.logging import get_logger
+from eka.shared.infrastructure.metrics import record_search
 
 logger = get_logger(__name__)
 
@@ -41,10 +44,18 @@ class SearchHandler:
         self._cache_ttl_seconds = cache_ttl_seconds
 
     async def handle(self, tenant_id: uuid.UUID, query: SearchQuery) -> list[ScoredChunk]:
+        start = time.perf_counter()
         key = build_cache_key(tenant_id, query.collection_id, query.text, query.top_k)
         cached = await self._cache.get(key)
         if cached is not None:
-            logger.info("search_cache_hit", tenant_id=str(tenant_id))
+            duration_ms = (time.perf_counter() - start) * 1000
+            record_search(duration_ms=duration_ms, cache_hit=True)
+            logger.info(
+                "search_cache_hit",
+                tenant_id=str(tenant_id),
+                results=len(cached),
+                duration_ms=round(duration_ms, 2),
+            )
             return cached
 
         embedding = (await self._embedder.embed([query.text]))[0]
@@ -53,5 +64,12 @@ class SearchHandler:
         )
         ranked = await self._reranker.rerank(query.text, candidates, query.top_k)
         await self._cache.set(key, ranked, self._cache_ttl_seconds)
-        logger.info("search_completed", tenant_id=str(tenant_id), results=len(ranked))
+        duration_ms = (time.perf_counter() - start) * 1000
+        record_search(duration_ms=duration_ms, cache_hit=False)
+        logger.info(
+            "search_completed",
+            tenant_id=str(tenant_id),
+            results=len(ranked),
+            duration_ms=round(duration_ms, 2),
+        )
         return ranked

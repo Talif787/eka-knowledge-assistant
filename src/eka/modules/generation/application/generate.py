@@ -5,9 +5,11 @@ injection, assemble a grounded prompt with citation markers, then stream the
 answer. Emits a sources event first (so a client can render citations before
 tokens arrive), then token events, then a done event.
 """
+
 from __future__ import annotations
 
 import dataclasses
+import time
 import uuid
 from collections.abc import AsyncIterator
 
@@ -24,6 +26,7 @@ from eka.modules.generation.domain.prompt import (
 )
 from eka.modules.retrieval.domain.search import ScoredChunk, SearchQuery
 from eka.shared.infrastructure.logging import get_logger
+from eka.shared.infrastructure.metrics import record_answer
 
 logger = get_logger(__name__)
 
@@ -54,6 +57,7 @@ class GenerateAnswerHandler:
     async def stream(
         self, tenant_id: uuid.UUID, query: SearchQuery
     ) -> AsyncIterator[dict[str, object]]:
+        start = time.perf_counter()
         chunks = await self._searcher.handle(tenant_id, query)
         sanitized, flagged = self._sanitize(chunks)
         prompt: GroundedPrompt = build_grounded_prompt(
@@ -77,6 +81,12 @@ class GenerateAnswerHandler:
         async for token in self._language_model.stream(prompt):
             yield {"type": EventType.TOKEN, "text": token}
         yield {"type": EventType.DONE}
+        duration_ms = (time.perf_counter() - start) * 1000
+        record_answer(duration_ms=duration_ms, flagged=flagged)
         logger.info(
-            "answer_completed", tenant_id=str(tenant_id), passages=len(sanitized)
+            "answer_completed",
+            tenant_id=str(tenant_id),
+            passages=len(sanitized),
+            flagged=flagged,
+            duration_ms=round(duration_ms, 2),
         )
