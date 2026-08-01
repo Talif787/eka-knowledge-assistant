@@ -110,10 +110,13 @@ for identical content returns the existing document instead of duplicating it.
 ## Deployment
 
 The service is containerized (multi-stage, non-root) and ships with a health
-check. Kubernetes manifests, Helm chart, and Terraform arrive in Phase 7. Run the worker alongside the API to process ingestion jobs (`make worker` or the
-compose `worker` service). Run
-`alembic upgrade head` before starting the API; migrations are backward
-compatible (expand-then-contract) so rollbacks are safe.
+check. A Helm chart and a Terraform configuration deploy it to Kubernetes, with
+a local kind path that runs entirely free (in-cluster Postgres and Redis) and a
+production path that points at managed services. See `docs/DEPLOYMENT.md` and
+`docs/SCALING.md`. The worker runs alongside the API to process ingestion jobs.
+Migrations (`alembic upgrade head`) run as a Helm hook against an external
+database or as an init container locally; they are backward compatible
+(expand-then-contract) so rollbacks are safe.
 
 ## Troubleshooting and runbook
 
@@ -129,4 +132,4 @@ metrics, see `docs/OBSERVABILITY.md`.
 4. Generation: prompt assembly, LLM port, SSE streaming, citations, guardrails (done).
 5. AuthN/AuthZ: OIDC/JWT, RBAC + ABAC, retrieval-time ACL enforcement (JWT done).
 6. Evaluation harness and CI quality gate (done).
-7. Observability depth (metrics done), Kubernetes/Helm, Terraform, full operational docs.
+7. Deployment and scale: Helm chart, Terraform, kind-based local path, CI deploy validation (done).
