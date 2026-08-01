@@ -1,0 +1,33 @@
+{{ include "eka.fullname" . }} is installed.
+
+Components:
+  - API deployment:    {{ include "eka.fullname" . }}-api
+  - Worker deployment: {{ include "eka.fullname" . }}-worker
+{{- if .Values.postgresql.enabled }}
+  - Postgres (in-cluster, pgvector): {{ include "eka.postgresHost" . }}
+{{- else }}
+  - Database: external ({{ if .Values.externalDatabase.dsn }}configured{{ else }}NOT configured{{ end }})
+{{- end }}
+{{- if .Values.redis.enabled }}
+  - Redis (in-cluster): {{ include "eka.redisHost" . }}
+{{- else }}
+  - Redis: external ({{ if .Values.externalRedis.url }}configured{{ else }}NOT configured{{ end }})
+{{- end }}
+
+Reach the API locally with a port-forward:
+
+  kubectl port-forward svc/{{ include "eka.fullname" . }} 8000:{{ .Values.api.service.port }}
+
+Then check health:
+
+  curl -sf http://localhost:8000/health/ready && echo OK
+
+{{- if .Values.auth.devTokenEnabled }}
+
+The dev token endpoint is ENABLED (development only). Mint a bearer token:
+
+  curl -s -X POST http://localhost:8000/v1/auth/token
+{{- else }}
+
+The dev token endpoint is disabled. Issue tokens from your identity provider.
+{{- end }}

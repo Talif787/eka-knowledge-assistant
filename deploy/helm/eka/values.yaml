@@ -1,0 +1,129 @@
+# Production-leaning defaults. Postgres and Redis are OFF here, on the
+# assumption that production points at managed services (for example RDS and
+# ElastiCache). The dev token endpoint is OFF. JWT secret and the external
+# database DSN are required and intentionally empty, so an install without them
+# fails closed rather than shipping an insecure default.
+
+image:
+  repository: eka
+  # tag defaults to the chart appVersion when empty
+  tag: ""
+  pullPolicy: IfNotPresent
+imagePullSecrets: []
+
+nameOverride: ""
+fullnameOverride: ""
+
+environment: production
+serviceName: eka-api
+logLevel: INFO
+
+api:
+  replicaCount: 2
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: "1"
+      memory: 512Mi
+  service:
+    type: ClusterIP
+    port: 8000
+
+worker:
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 6
+  targetCPUUtilizationPercentage: 70
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  host: eka.local
+  path: /
+  pathType: Prefix
+  tls: []
+
+networkPolicy:
+  enabled: false
+
+serviceAccount:
+  create: true
+  name: ""
+
+# In-cluster Postgres (pgvector). Off in production; on for local clusters.
+postgresql:
+  enabled: false
+  image: pgvector/pgvector:pg16
+  auth:
+    username: eka
+    password: ""
+    database: eka
+  storage: 5Gi
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+
+# Used when postgresql.enabled is false. Full async DSN to a managed database.
+externalDatabase:
+  dsn: ""
+
+# In-cluster Redis. Off in production; on for local clusters.
+redis:
+  enabled: false
+  image: redis:7-alpine
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
+
+# Used when redis.enabled is false.
+externalRedis:
+  url: ""
+
+migrations:
+  # Run "alembic upgrade head" as a pre-install/pre-upgrade hook. Suits an
+  # external database that is reachable at hook time (the production pattern).
+  hook: true
+  # Run migrations as an init container on the API pod instead. Suits a local
+  # in-cluster database created by this same chart. Keep API replicas at 1 when
+  # using this, to avoid concurrent migration runs.
+  initContainer: false
+
+auth:
+  devTokenEnabled: false
+
+jwt:
+  secret: ""
+  issuer: eka
+  algorithm: HS256
+  accessTtlSeconds: 3600
+
+config:
+  databasePoolSize: 10
+  otlpEndpoint: ""
+  workerBatchSize: 5
+  workerPollIntervalSeconds: 1.0

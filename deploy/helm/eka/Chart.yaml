@@ -1,0 +1,9 @@
+apiVersion: v2
+name: eka
+description: RAG-Powered Enterprise Knowledge Assistant (API, worker, and dependencies)
+type: application
+version: 0.7.0
+appVersion: "0.7.0"
+kubeVersion: ">=1.25.0-0"
+maintainers:
+  - name: Talif Pathan

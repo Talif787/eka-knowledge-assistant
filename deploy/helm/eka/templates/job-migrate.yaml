@@ -1,0 +1,47 @@
+{{- if .Values.migrations.hook }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "eka.fullname" . }}-migrate
+  labels:
+    {{- include "eka.labels" . | nindent 4 }}
+    app.kubernetes.io/component: migrate
+  annotations:
+    helm.sh/hook: pre-install,pre-upgrade
+    helm.sh/hook-weight: "0"
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: 3
+  template:
+    metadata:
+      labels:
+        {{- include "eka.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: migrate
+    spec:
+      restartPolicy: Never
+      serviceAccountName: {{ include "eka.serviceAccountName" . }}
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+        runAsGroup: 999
+        fsGroup: 999
+      {{- if .Values.postgresql.enabled }}
+      initContainers:
+        {{- include "eka.waitForDb" . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: migrate
+          image: {{ include "eka.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["sh", "-c", "alembic upgrade head"]
+          envFrom:
+            {{- include "eka.envFrom" . | nindent 12 }}
+          securityContext:
+            {{- include "eka.containerSecurityContext" . | nindent 12 }}
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+{{- end }}

@@ -1,0 +1,4 @@
+# Copy to terraform.tfvars and adjust if desired.
+cluster_name = "eka-local"
+release_name = "eka"
+namespace    = "eka"

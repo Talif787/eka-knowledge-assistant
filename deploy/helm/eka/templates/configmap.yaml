@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "eka.fullname" . }}-config
+  labels:
+    {{- include "eka.labels" . | nindent 4 }}
+data:
+  EKA_ENVIRONMENT: {{ .Values.environment | quote }}
+  EKA_SERVICE_NAME: {{ .Values.serviceName | quote }}
+  EKA_LOG_LEVEL: {{ .Values.logLevel | quote }}
+  EKA_DATABASE_POOL_SIZE: {{ .Values.config.databasePoolSize | quote }}
+  EKA_REDIS_URL: {{ include "eka.redisUrl" . | quote }}
+  EKA_JWT_ISSUER: {{ .Values.jwt.issuer | quote }}
+  EKA_JWT_ALGORITHM: {{ .Values.jwt.algorithm | quote }}
+  EKA_JWT_ACCESS_TTL_SECONDS: {{ .Values.jwt.accessTtlSeconds | quote }}
+  EKA_AUTH_DEV_TOKEN_ENABLED: {{ .Values.auth.devTokenEnabled | quote }}
+  EKA_WORKER_BATCH_SIZE: {{ .Values.config.workerBatchSize | quote }}
+  EKA_WORKER_POLL_INTERVAL_SECONDS: {{ .Values.config.workerPollIntervalSeconds | quote }}
+  {{- if .Values.config.otlpEndpoint }}
+  EKA_OTLP_ENDPOINT: {{ .Values.config.otlpEndpoint | quote }}
+  {{- end }}

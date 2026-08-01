@@ -1,0 +1,44 @@
+# Local overrides for a kind cluster: self-contained, everything in-cluster,
+# single replica, autoscaling off (kind has no metrics-server by default), and
+# the dev token endpoint on so you can mint a bearer token easily.
+
+image:
+  repository: eka
+  tag: local
+  pullPolicy: Never
+
+environment: development
+logLevel: INFO
+
+api:
+  replicaCount: 1
+
+worker:
+  replicaCount: 1
+
+autoscaling:
+  enabled: false
+
+podDisruptionBudget:
+  enabled: false
+
+postgresql:
+  enabled: true
+  auth:
+    username: eka
+    password: eka
+    database: eka
+  storage: 1Gi
+
+redis:
+  enabled: true
+
+migrations:
+  hook: false
+  initContainer: true
+
+auth:
+  devTokenEnabled: true
+
+jwt:
+  secret: "local-dev-insecure-secret-change-me-32bytes-min"
