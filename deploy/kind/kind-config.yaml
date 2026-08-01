@@ -1,0 +1,12 @@
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: eka-local
+nodes:
+  - role: control-plane
+    # Expose a node port to the host so an Ingress or NodePort service is
+    # reachable without a port-forward. Optional: the docs use port-forward,
+    # which needs no mapping.
+    extraPortMappings:
+      - containerPort: 30080
+        hostPort: 8080
+        protocol: TCP

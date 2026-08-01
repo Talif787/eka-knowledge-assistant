@@ -1,0 +1,112 @@
+name: deploy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "deploy/**"
+      - "docker/**"
+      - ".github/workflows/deploy.yml"
+  pull_request:
+    paths:
+      - "deploy/**"
+      - "docker/**"
+      - ".github/workflows/deploy.yml"
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: azure/setup-helm@v4
+        with:
+          version: v3.14.4
+
+      - name: Helm lint (local values)
+        run: helm lint deploy/helm/eka -f deploy/helm/eka/values-local.yaml
+
+      - name: Helm lint (production shape)
+        run: |
+          helm lint deploy/helm/eka \
+            --set jwt.secret=ci-dummy-secret-value-32-bytes-minimum \
+            --set externalDatabase.dsn=postgresql+asyncpg://u:p@db:5432/eka \
+            --set externalRedis.url=redis://redis:6379/0
+
+      - name: Install kubeconform
+        run: |
+          curl -sSLo /tmp/kc.tar.gz \
+            https://github.com/yannh/kubeconform/releases/download/v0.6.7/kubeconform-linux-amd64.tar.gz
+          tar -xzf /tmp/kc.tar.gz -C /tmp
+          sudo mv /tmp/kubeconform /usr/local/bin/
+
+      - name: Render and schema-validate (local)
+        run: |
+          helm template eka deploy/helm/eka -f deploy/helm/eka/values-local.yaml \
+            | kubeconform -strict -summary -kubernetes-version 1.29.0
+
+      - name: Render and schema-validate (production shape)
+        run: |
+          helm template eka deploy/helm/eka \
+            --set jwt.secret=ci-dummy-secret-value-32-bytes-minimum \
+            --set externalDatabase.dsn=postgresql+asyncpg://u:p@db:5432/eka \
+            --set externalRedis.url=redis://redis:6379/0 \
+            | kubeconform -strict -summary -kubernetes-version 1.29.0
+
+      - uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform init and validate
+        run: |
+          terraform -chdir=deploy/terraform init -backend=false
+          terraform -chdir=deploy/terraform validate
+
+      - name: Terraform fmt check
+        continue-on-error: true
+        run: terraform -chdir=deploy/terraform fmt -check -recursive
+
+  kind-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build application image
+        run: docker build -f docker/Dockerfile -t eka:local .
+
+      - uses: helm/kind-action@v1
+        with:
+          cluster_name: eka-local
+
+      - name: Load image into kind
+        run: kind load docker-image eka:local --name eka-local
+
+      - uses: azure/setup-helm@v4
+        with:
+          version: v3.14.4
+
+      - name: Install chart
+        run: |
+          helm upgrade --install eka deploy/helm/eka \
+            -f deploy/helm/eka/values-local.yaml \
+            --namespace eka --create-namespace \
+            --wait --timeout 300s
+
+      - name: Show state
+        if: always()
+        run: |
+          kubectl get pods -n eka -o wide
+          kubectl get svc -n eka
+
+      - name: Smoke test /health/ready
+        run: |
+          kubectl run smoke --rm -i --restart=Never -n eka \
+            --image=curlimages/curl:8.8.0 --command -- \
+            curl -sf --retry 10 --retry-delay 3 --retry-connrefused \
+            http://eka.eka.svc.cluster.local:8000/health/ready
+
+      - name: Dump diagnostics on failure
+        if: failure()
+        run: |
+          kubectl get pods -n eka
+          kubectl describe pods -n eka || true
+          kubectl logs -n eka -l app.kubernetes.io/component=api --tail=100 || true
+          kubectl logs -n eka -l app.kubernetes.io/component=worker --tail=50 || true
