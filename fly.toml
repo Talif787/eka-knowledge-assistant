@@ -1,0 +1,48 @@
+# Fly.io config for the EKA backend: the API and the worker run as two process
+# groups from the same image. Data services stay on Neon and Upstash; their
+# connection strings and the JWT secret are set with `fly secrets set` (never
+# committed here). App-level secrets are shared across both processes, so the
+# JWT secret is identical for the API and the worker automatically.
+
+app = "eka-api"
+primary_region = "iad"  # Ashburn, close to Neon us-east-1
+
+[build]
+  dockerfile = "docker/Dockerfile"
+
+[deploy]
+  # Run migrations once, before the new version goes live.
+  release_command = "alembic upgrade head"
+
+[env]
+  EKA_ENVIRONMENT = "production"
+  EKA_LOG_LEVEL = "INFO"
+  # Demo auth: each visitor mints a sandbox-tenant token. This is NOT real user
+  # auth. Set to "false" only if you add a real identity system.
+  EKA_AUTH_DEV_TOKEN_ENABLED = "true"
+  EKA_WORKER_POLL_INTERVAL_SECONDS = "5"
+
+[processes]
+  app = "uvicorn eka.main:app --host 0.0.0.0 --port 8000"
+  worker = "python -m eka.worker"
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  # Scale the API to zero when idle to save money; Fly resumes it in seconds on
+  # the next request. Set min_machines_running = 1 to keep it always warm.
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ["app"]
+
+  [[http_service.checks]]
+    method = "GET"
+    path = "/health/ready"
+    interval = "15s"
+    timeout = "2s"
+    grace_period = "10s"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"
