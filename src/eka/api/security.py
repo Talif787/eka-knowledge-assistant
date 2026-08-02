@@ -7,7 +7,7 @@ which the error handler maps to 401.
 """
 from __future__ import annotations
 
-from fastapi import Depends
+from fastapi import Depends, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from eka.config import get_settings
@@ -41,9 +41,18 @@ def get_token_issuer() -> TokenIssuer:
 
 
 def get_current_identity(
+    request: Request,
     credentials: HTTPAuthorizationCredentials | None = Depends(_bearer_scheme),
     verifier: TokenVerifier = Depends(get_token_verifier),
 ) -> AuthenticatedIdentity:
-    if credentials is None:
+    # Prefer the standard Authorization bearer; fall back to X-EKA-Token, which
+    # survives environments (like Codespaces port tunnels) that consume the
+    # Authorization header for their own auth.
+    token = (
+        credentials.credentials
+        if credentials is not None
+        else request.headers.get("X-EKA-Token")
+    )
+    if not token:
         raise AuthenticationError("missing bearer token")
-    return verifier.verify(credentials.credentials)
+    return verifier.verify(token)

@@ -9,3 +9,9 @@ venv/
 dist/
 build/
 *.egg-info/
+
+# deploy tooling, do not commit binaries
+kubectl
+get_helm.sh
+terraform
+terraform_*.zip

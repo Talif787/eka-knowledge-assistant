@@ -10,6 +10,7 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
 from redis.asyncio import Redis
@@ -81,6 +82,17 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.add_middleware(AccessLogMiddleware)
     app.add_middleware(SecurityHeadersMiddleware)
     app.add_middleware(CorrelationIdMiddleware)
+    # Dev CORS: allow a browser-based frontend on another origin to call the
+    # API directly. Auth travels in a header (not a cookie), so credentials
+    # are off and a wildcard origin is safe for local development.
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=False,
+        allow_methods=["*"],
+        allow_headers=["*"],
+        expose_headers=["*"],
+    )
 
     register_exception_handlers(app)
     app.include_router(health_router)
